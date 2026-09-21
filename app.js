@@ -2,6 +2,7 @@ const STORAGE_KEY = 'eatSpend.meals.v1';
 const SETTINGS_KEY = 'eatSpend.settings.v2';
 const PROFILE_KEY = 'eatSpend.profile.v1';
 const CHECKIN_KEY = 'eatSpend.checkins.v1';
+const ONBOARDING_KEY = 'eatSpend.onboarding.v1';
 
 const defaultSettings = { calories: 1800, budget: 400 };
 const defaultProfile = { height: '', weight: '', age: '', sex: '', activity: 1.2 };
@@ -10,6 +11,8 @@ let meals = loadJSON(STORAGE_KEY, []);
 let settings = { ...defaultSettings, ...loadJSON(SETTINGS_KEY, migrateOldSettings()) };
 let profile = { ...defaultProfile, ...loadJSON(PROFILE_KEY, {}) };
 let checkins = loadJSON(CHECKIN_KEY, []);
+let onboardingComplete = localStorage.getItem(ONBOARDING_KEY) === 'complete';
+let onboardingEstimate = 0;
 
 const $ = (id) => document.getElementById(id);
 
@@ -92,23 +95,58 @@ function prepareAddForm() {
   if (!$('mealTime').value) $('mealTime').value = currentTimeString();
 }
 
-function calculateSuggestedCalories() {
-  const height = Number($('profileHeight').value);
-  const weight = Number($('profileWeight').value);
-  const age = Number($('profileAge').value);
-  const sex = $('profileSex').value;
-  const activity = Number($('profileActivity').value);
-
-  if (!height || !weight || !age || !sex || !activity) {
-    showToast('請先填完整基本資料');
-    return null;
-  }
+function calculateCaloriesFromValues(height, weight, age, sex, activity) {
+  height = Number(height);
+  weight = Number(weight);
+  age = Number(age);
+  activity = Number(activity);
+  if (!height || !weight || !age || !sex || !activity) return null;
 
   const bmr = sex === 'male'
     ? (10 * weight) + (6.25 * height) - (5 * age) + 5
     : (10 * weight) + (6.25 * height) - (5 * age) - 161;
-
   return Math.round(bmr * activity);
+}
+
+function showOnboardingStep(step) {
+  document.querySelectorAll('[data-onboarding-step]').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.onboardingStep) === step);
+  });
+  document.querySelectorAll('[data-onboarding-dot]').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.onboardingDot) === step);
+  });
+}
+
+function openOnboarding() {
+  $('onboarding').hidden = false;
+  document.body.classList.add('onboarding-open');
+  $('onboardHeight').value = profile.height || '';
+  $('onboardWeight').value = profile.weight || '';
+  $('onboardAge').value = profile.age || '';
+  $('onboardSex').value = profile.sex || '';
+  $('onboardActivity').value = String(profile.activity || 1.2);
+  $('onboardBudget').value = settings.budget || 400;
+  showOnboardingStep(1);
+}
+
+function closeOnboarding() {
+  $('onboarding').hidden = true;
+  document.body.classList.remove('onboarding-open');
+}
+
+function calculateSuggestedCalories() {
+  const estimate = calculateCaloriesFromValues(
+    $('profileHeight').value,
+    $('profileWeight').value,
+    $('profileAge').value,
+    $('profileSex').value,
+    $('profileActivity').value
+  );
+  if (estimate === null) {
+    showToast('請先填完整基本資料');
+    return null;
+  }
+  return estimate;
 }
 
 function renderEstimate() {
@@ -244,6 +282,51 @@ $('mealForm').addEventListener('submit', (event) => {
   showToast('已加入飲食紀錄');
 });
 
+$('onboardingNextBtn').addEventListener('click', () => {
+  const height = Number($('onboardHeight').value);
+  const weight = Number($('onboardWeight').value);
+  const age = Number($('onboardAge').value);
+  const sex = $('onboardSex').value;
+  const activity = Number($('onboardActivity').value);
+
+  onboardingEstimate = calculateCaloriesFromValues(height, weight, age, sex, activity);
+  if (onboardingEstimate === null) {
+    showToast('請先填完整基本資料');
+    return;
+  }
+
+  profile = { height, weight, age, sex, activity };
+  $('onboardCaloriesText').textContent = formatNumber(onboardingEstimate);
+  if (!$('onboardBudget').value) $('onboardBudget').value = settings.budget || 400;
+  showOnboardingStep(2);
+});
+
+$('onboardingBackBtn').addEventListener('click', () => showOnboardingStep(1));
+
+$('onboardingFinishBtn').addEventListener('click', () => {
+  const budget = Number($('onboardBudget').value);
+  if (!budget || budget <= 0) {
+    showToast('請輸入每日餐費預算');
+    return;
+  }
+  if (!onboardingEstimate) {
+    onboardingEstimate = calculateCaloriesFromValues(profile.height, profile.weight, profile.age, profile.sex, profile.activity);
+  }
+  if (!onboardingEstimate) {
+    showOnboardingStep(1);
+    showToast('請先完成基本資料');
+    return;
+  }
+
+  settings = { calories: onboardingEstimate, budget };
+  onboardingComplete = true;
+  localStorage.setItem(ONBOARDING_KEY, 'complete');
+  saveState();
+  render();
+  closeOnboarding();
+  showToast('設定完成，開始記錄吧');
+});
+
 $('calculateCaloriesBtn').addEventListener('click', () => {
   const estimate = calculateSuggestedCalories();
   if (estimate === null) return;
@@ -293,9 +376,11 @@ $('clearDataBtn').addEventListener('click', () => {
   settings = { ...defaultSettings };
   profile = { ...defaultProfile };
   checkins = [];
+  onboardingComplete = false;
   saveState();
-  render();
+  localStorage.removeItem(ONBOARDING_KEY);
   showToast('測試資料已清除');
+  setTimeout(() => location.reload(), 250);
 });
 
 document.addEventListener('click', (event) => {
@@ -314,3 +399,4 @@ if ('serviceWorker' in navigator) {
 
 prepareAddForm();
 render();
+if (!onboardingComplete) openOnboarding();

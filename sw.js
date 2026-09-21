@@ -1,4 +1,4 @@
-const CACHE = 'eat-spend-v2';
+const CACHE = 'eat-spend-v3';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {

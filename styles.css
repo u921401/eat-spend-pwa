@@ -106,3 +106,32 @@ input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px va
   .checkin-card { align-items: flex-start; flex-direction: column; }
   .checkin-btn { width: 100%; }
 }
+
+/* First-run onboarding */
+body.onboarding-open { overflow: hidden; }
+.onboarding { position: fixed; inset: 0; z-index: 100; background: linear-gradient(180deg, #eef7f6 0%, #f8f9f7 48%, #f5f7f7 100%); overflow-y: auto; }
+.onboarding[hidden] { display: none; }
+.onboarding-panel { width: min(100%, 640px); min-height: 100dvh; margin: 0 auto; padding: calc(42px + env(safe-area-inset-top)) 22px calc(30px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: center; }
+.onboarding-progress { display: flex; gap: 7px; margin-bottom: 30px; }
+.onboarding-progress i { width: 28px; height: 5px; border-radius: 999px; background: #d7e3e1; transition: .2s ease; }
+.onboarding-progress i.active { background: var(--brand); width: 48px; }
+.onboarding-step { display: none; }
+.onboarding-step.active { display: block; animation: fade .2s ease-out; }
+.onboarding-step h1 { margin: 7px 0 10px; font-size: clamp(2rem, 8vw, 2.75rem); line-height: 1.08; letter-spacing: -.045em; }
+.onboarding-lead { margin: 0 0 26px; color: var(--muted); line-height: 1.65; font-size: .98rem; }
+.onboarding-form { display: grid; gap: 16px; }
+.onboarding .primary-btn, .onboarding .secondary-btn { width: 100%; min-height: 52px; }
+.onboarding-result { display: grid; gap: 16px; }
+.onboarding-result-card { padding: 22px; border-radius: 24px; background: linear-gradient(140deg, #0f6f73 0%, #155f63 100%); color: white; box-shadow: var(--shadow); }
+.onboarding-result-card span, .onboarding-result-card strong { display: block; }
+.onboarding-result-card > span { color: rgba(255,255,255,.75); font-size: .86rem; margin-bottom: 7px; }
+.onboarding-result-card strong { font-size: 2.35rem; letter-spacing: -.045em; }
+.budget-field { padding: 17px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+.budget-field input { margin-top: 2px; font-size: 1.3rem; font-weight: 800; }
+.onboarding-note { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.55; }
+.onboarding-actions { display: grid; grid-template-columns: .8fr 1.2fr; gap: 10px; margin-top: 24px; }
+
+@media (max-width: 380px) {
+  .onboarding-panel { padding-left: 17px; padding-right: 17px; }
+  .onboarding-actions { grid-template-columns: 1fr; }
+}
