@@ -51,11 +51,15 @@
             <strong>NT$<span id="budgetUsed">0</span> <small>/ NT$<span id="budgetGoalText">400</span></small></strong>
             <div class="progress"><i id="budgetBar"></i></div>
           </article>
-          <article class="metric-card wide">
-            <div class="metric-header"><span>💪 蛋白質</span><span id="proteinPct">0%</span></div>
-            <strong><span id="proteinUsed">0</span> <small>/ <span id="proteinGoalText">100</span> g</small></strong>
-            <div class="progress"><i id="proteinBar"></i></div>
-          </article>
+        </section>
+
+        <section class="checkin-card" aria-labelledby="checkinTitle">
+          <div>
+            <p class="checkin-kicker">每日簽到</p>
+            <h2 id="checkinTitle"><span id="streakCount">0</span> 天連續紀錄</h2>
+            <p class="muted">累積簽到 <span id="totalCheckins">0</span> 天</p>
+          </div>
+          <button id="checkinBtn" class="checkin-btn" type="button">今日簽到</button>
         </section>
 
         <section class="section-block">
@@ -71,7 +75,7 @@
         <section class="page-heading">
           <p class="eyebrow">快速紀錄</p>
           <h2>新增一餐</h2>
-          <p class="muted">先記最必要的資訊，之後都可以修改。</p>
+          <p class="muted">只記食物、金額與熱量，越快完成越容易天天用。</p>
         </section>
 
         <form id="mealForm" class="form-card">
@@ -94,14 +98,9 @@
             </label>
           </div>
 
-          <div class="field-row">
-            <label>熱量 kcal
-              <input id="calories" name="calories" type="number" inputmode="numeric" min="0" step="1" placeholder="650" required />
-            </label>
-            <label>蛋白質 g
-              <input id="protein" name="protein" type="number" inputmode="decimal" min="0" step="0.1" placeholder="35" />
-            </label>
-          </div>
+          <label>熱量 kcal
+            <input id="calories" name="calories" type="number" inputmode="numeric" min="0" step="1" placeholder="650" required />
+          </label>
 
           <div class="field-row">
             <label>日期
@@ -129,15 +128,64 @@
         <section class="page-heading">
           <p class="eyebrow">個人目標</p>
           <h2>設定</h2>
-          <p class="muted">先用簡單目標測試你會不會每天打開它。</p>
+          <p class="muted">先估算每日所需熱量，再決定你想採用的目標與餐費預算。</p>
         </section>
 
         <form id="settingsForm" class="form-card">
+          <div class="form-section-title">
+            <h3>基本資料</h3>
+            <p>用來估算每日維持熱量。</p>
+          </div>
+
+          <div class="field-row">
+            <label>身高 cm
+              <input id="profileHeight" type="number" inputmode="decimal" min="100" max="250" step="0.1" placeholder="170" />
+            </label>
+            <label>體重 kg
+              <input id="profileWeight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="65" />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label>年齡
+              <input id="profileAge" type="number" inputmode="numeric" min="18" max="100" step="1" placeholder="30" />
+            </label>
+            <label>性別
+              <select id="profileSex">
+                <option value="">請選擇</option>
+                <option value="male">男性</option>
+                <option value="female">女性</option>
+              </select>
+            </label>
+          </div>
+
+          <label>日常活動量
+            <select id="profileActivity">
+              <option value="1.2">久坐｜幾乎沒有運動</option>
+              <option value="1.375">輕度｜每週約 1–3 天活動</option>
+              <option value="1.55">中度｜每週約 3–5 天活動</option>
+              <option value="1.725">高度｜每週約 6–7 天活動</option>
+              <option value="1.9">非常高｜高強度運動或體力工作</option>
+            </select>
+          </label>
+
+          <button id="calculateCaloriesBtn" class="secondary-btn" type="button">計算每日建議熱量</button>
+
+          <div class="estimate-box" id="estimateBox" hidden>
+            <span>估算每日維持熱量</span>
+            <strong><span id="estimatedCalories">0</span> kcal</strong>
+            <small>以 Mifflin–St Jeor 公式搭配活動量估算，實際需求會因個人狀況而不同。</small>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <div class="form-section-title">
+            <h3>每日目標</h3>
+            <p>熱量可以採用估算值，也可以自行調整。</p>
+          </div>
+
           <label>每日熱量目標 kcal
             <input id="goalCalories" type="number" min="1" step="1" />
-          </label>
-          <label>每日蛋白質目標 g
-            <input id="goalProtein" type="number" min="1" step="1" />
           </label>
           <label>每日餐費預算 NT$
             <input id="goalBudget" type="number" min="1" step="1" />

@@ -1,9 +1,15 @@
 const STORAGE_KEY = 'eatSpend.meals.v1';
-const SETTINGS_KEY = 'eatSpend.settings.v1';
+const SETTINGS_KEY = 'eatSpend.settings.v2';
+const PROFILE_KEY = 'eatSpend.profile.v1';
+const CHECKIN_KEY = 'eatSpend.checkins.v1';
 
-const defaultSettings = { calories: 1800, protein: 100, budget: 400 };
+const defaultSettings = { calories: 1800, budget: 400 };
+const defaultProfile = { height: '', weight: '', age: '', sex: '', activity: 1.2 };
+
 let meals = loadJSON(STORAGE_KEY, []);
-let settings = { ...defaultSettings, ...loadJSON(SETTINGS_KEY, {}) };
+let settings = { ...defaultSettings, ...loadJSON(SETTINGS_KEY, migrateOldSettings()) };
+let profile = { ...defaultProfile, ...loadJSON(PROFILE_KEY, {}) };
+let checkins = loadJSON(CHECKIN_KEY, []);
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,9 +22,19 @@ function loadJSON(key, fallback) {
   }
 }
 
+function migrateOldSettings() {
+  const old = loadJSON('eatSpend.settings.v1', {});
+  return {
+    calories: Number(old.calories || defaultSettings.calories),
+    budget: Number(old.budget || defaultSettings.budget)
+  };
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  localStorage.setItem(CHECKIN_KEY, JSON.stringify(checkins));
 }
 
 function localDateString(date = new Date()) {
@@ -26,6 +42,17 @@ function localDateString(date = new Date()) {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+function dateFromLocalString(value) {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function addDays(date, delta) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + delta);
+  return copy;
 }
 
 function currentTimeString() {
@@ -65,6 +92,64 @@ function prepareAddForm() {
   if (!$('mealTime').value) $('mealTime').value = currentTimeString();
 }
 
+function calculateSuggestedCalories() {
+  const height = Number($('profileHeight').value);
+  const weight = Number($('profileWeight').value);
+  const age = Number($('profileAge').value);
+  const sex = $('profileSex').value;
+  const activity = Number($('profileActivity').value);
+
+  if (!height || !weight || !age || !sex || !activity) {
+    showToast('請先填完整基本資料');
+    return null;
+  }
+
+  const bmr = sex === 'male'
+    ? (10 * weight) + (6.25 * height) - (5 * age) + 5
+    : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+
+  return Math.round(bmr * activity);
+}
+
+function renderEstimate() {
+  if (!profile.height || !profile.weight || !profile.age || !profile.sex || !profile.activity) {
+    $('estimateBox').hidden = true;
+    return;
+  }
+
+  const bmr = profile.sex === 'male'
+    ? (10 * Number(profile.weight)) + (6.25 * Number(profile.height)) - (5 * Number(profile.age)) + 5
+    : (10 * Number(profile.weight)) + (6.25 * Number(profile.height)) - (5 * Number(profile.age)) - 161;
+  const estimate = Math.round(bmr * Number(profile.activity));
+  $('estimatedCalories').textContent = formatNumber(estimate);
+  $('estimateBox').hidden = false;
+}
+
+function getStreak() {
+  if (!checkins.length) return 0;
+  const unique = new Set(checkins);
+  const today = new Date();
+  const todayKey = localDateString(today);
+  let cursor = unique.has(todayKey) ? today : addDays(today, -1);
+  let streak = 0;
+
+  while (unique.has(localDateString(cursor))) {
+    streak += 1;
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
+}
+
+function renderCheckin() {
+  const today = localDateString();
+  const checked = checkins.includes(today);
+  $('streakCount').textContent = getStreak();
+  $('totalCheckins').textContent = new Set(checkins).size;
+  $('checkinBtn').textContent = checked ? '今天已簽到 ✓' : '今日簽到';
+  $('checkinBtn').disabled = checked;
+  $('checkinBtn').classList.toggle('done', checked);
+}
+
 function render() {
   const today = localDateString();
   const dateLabel = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
@@ -76,10 +161,9 @@ function render() {
 
   const totals = todayMeals.reduce((acc, m) => {
     acc.calories += Number(m.calories || 0);
-    acc.protein += Number(m.protein || 0);
     acc.cost += Number(m.cost || 0);
     return acc;
-  }, { calories: 0, protein: 0, cost: 0 });
+  }, { calories: 0, cost: 0 });
 
   const remainingCalories = Math.max(0, settings.calories - totals.calories);
   const remainingBudget = Math.max(0, settings.budget - totals.cost);
@@ -88,21 +172,25 @@ function render() {
   $('remainingBudget').textContent = `NT$${formatMoney(remainingBudget)}`;
   $('calorieUsed').textContent = formatNumber(totals.calories);
   $('budgetUsed').textContent = formatMoney(totals.cost);
-  $('proteinUsed').textContent = formatNumber(totals.protein);
   $('calorieGoalText').textContent = formatNumber(settings.calories);
   $('budgetGoalText').textContent = formatMoney(settings.budget);
-  $('proteinGoalText').textContent = formatNumber(settings.protein);
 
   setProgress('calorie', totals.calories, settings.calories);
   setProgress('budget', totals.cost, settings.budget);
-  setProgress('protein', totals.protein, settings.protein);
 
   $('todayList').innerHTML = renderMealCards(todayMeals, true);
   $('recordsList').innerHTML = renderMealCards([...meals].sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`)), false);
 
   $('goalCalories').value = settings.calories;
-  $('goalProtein').value = settings.protein;
   $('goalBudget').value = settings.budget;
+  $('profileHeight').value = profile.height;
+  $('profileWeight').value = profile.weight;
+  $('profileAge').value = profile.age;
+  $('profileSex').value = profile.sex;
+  $('profileActivity').value = String(profile.activity || 1.2);
+
+  renderEstimate();
+  renderCheckin();
 }
 
 function setProgress(prefix, used, goal) {
@@ -124,7 +212,7 @@ function renderMealCards(list, todayMode) {
       </div>
       <div class="meal-numbers">
         <strong>${formatNumber(m.calories)} kcal</strong>
-        <span>NT$${formatMoney(m.cost)} · ${formatNumber(m.protein)}g 蛋白質</span>
+        <span>NT$${formatMoney(m.cost)}</span>
       </div>
       <div class="meal-actions"><button class="small-danger" data-delete="${m.id}">刪除</button></div>
     </article>`).join('');
@@ -145,7 +233,6 @@ $('mealForm').addEventListener('submit', (event) => {
     mealType: $('mealType').value,
     cost: Number($('cost').value),
     calories: Number($('calories').value),
-    protein: Number($('protein').value || 0),
     date: $('mealDate').value,
     time: $('mealTime').value
   };
@@ -157,11 +244,34 @@ $('mealForm').addEventListener('submit', (event) => {
   showToast('已加入飲食紀錄');
 });
 
+$('calculateCaloriesBtn').addEventListener('click', () => {
+  const estimate = calculateSuggestedCalories();
+  if (estimate === null) return;
+
+  profile = {
+    height: Number($('profileHeight').value),
+    weight: Number($('profileWeight').value),
+    age: Number($('profileAge').value),
+    sex: $('profileSex').value,
+    activity: Number($('profileActivity').value)
+  };
+  $('estimatedCalories').textContent = formatNumber(estimate);
+  $('estimateBox').hidden = false;
+  $('goalCalories').value = estimate;
+  showToast('已帶入估算熱量');
+});
+
 $('settingsForm').addEventListener('submit', (event) => {
   event.preventDefault();
+  profile = {
+    height: Number($('profileHeight').value) || '',
+    weight: Number($('profileWeight').value) || '',
+    age: Number($('profileAge').value) || '',
+    sex: $('profileSex').value,
+    activity: Number($('profileActivity').value) || 1.2
+  };
   settings = {
     calories: Number($('goalCalories').value),
-    protein: Number($('goalProtein').value),
     budget: Number($('goalBudget').value)
   };
   saveState();
@@ -169,9 +279,20 @@ $('settingsForm').addEventListener('submit', (event) => {
   showToast('設定已儲存');
 });
 
+$('checkinBtn').addEventListener('click', () => {
+  const today = localDateString();
+  if (!checkins.includes(today)) checkins.push(today);
+  saveState();
+  renderCheckin();
+  showToast('今日簽到完成');
+});
+
 $('clearDataBtn').addEventListener('click', () => {
-  if (!confirm('確定要清除所有測試資料嗎？這個動作無法復原。')) return;
+  if (!confirm('確定要清除所有測試資料嗎？飲食紀錄、簽到與設定都會清除，且無法復原。')) return;
   meals = [];
+  settings = { ...defaultSettings };
+  profile = { ...defaultProfile };
+  checkins = [];
   saveState();
   render();
   showToast('測試資料已清除');

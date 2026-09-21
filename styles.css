@@ -38,12 +38,19 @@ main { padding: 8px 16px 24px; }
 
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .metric-card { background: var(--surface); padding: 16px; border-radius: 18px; box-shadow: 0 8px 28px rgba(31,55,55,.05); border: 1px solid rgba(231,236,235,.8); }
-.metric-card.wide { grid-column: 1 / -1; }
 .metric-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: .82rem; color: var(--muted); margin-bottom: 12px; }
 .metric-card strong { font-size: 1.25rem; letter-spacing: -.02em; }
 .metric-card small { font-size: .78rem; color: var(--muted); font-weight: 600; }
 .progress { margin-top: 12px; width: 100%; height: 7px; border-radius: 999px; background: #edf1f0; overflow: hidden; }
 .progress i { display: block; width: 0%; height: 100%; border-radius: inherit; background: var(--brand); transition: width .2s ease; }
+
+.checkin-card { margin-top: 12px; background: #fff8e8; border: 1px solid #f2e2b7; border-radius: 20px; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.checkin-kicker { margin: 0 0 3px; color: #8d6a1e; font-size: .75rem; font-weight: 800; letter-spacing: .06em; }
+.checkin-card h2 { margin: 0 0 4px; }
+.checkin-card .muted { margin: 0; font-size: .8rem; }
+.checkin-btn { flex: 0 0 auto; border: 0; border-radius: 13px; background: #f2b84b; color: #3c2c0b; font-weight: 850; padding: 11px 14px; }
+.checkin-btn.done { background: #e9eee9; color: #60706d; }
+.checkin-btn:disabled { cursor: default; }
 
 .section-block { margin-top: 22px; }
 .section-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -68,11 +75,20 @@ h2 { margin: 0; font-size: 1.2rem; letter-spacing: -.02em; }
 .muted { color: var(--muted); }
 .page-heading .muted { margin: 0; line-height: 1.5; }
 .form-card { background: var(--surface); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); display: grid; gap: 16px; }
+.form-section-title h3 { margin: 0 0 4px; font-size: 1rem; }
+.form-section-title p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+.form-divider { height: 1px; background: var(--line); margin: 2px 0; }
 label { display: grid; gap: 7px; color: #425251; font-size: .85rem; font-weight: 700; }
 input, select { width: 100%; min-width: 0; border: 1px solid #dce5e3; background: #fbfcfc; border-radius: 13px; padding: 13px 12px; color: var(--text); outline: none; }
 input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .primary-btn { border: 0; border-radius: 14px; background: var(--brand); color: white; padding: 14px 18px; font-weight: 800; margin-top: 2px; }
+.secondary-btn { border: 1px solid #b8d2cf; border-radius: 14px; background: var(--brand-soft); color: var(--brand); padding: 13px 18px; font-weight: 800; }
+.estimate-box { border-radius: 16px; background: #f2f8f7; border: 1px solid #d6e9e6; padding: 15px; }
+.estimate-box span, .estimate-box strong, .estimate-box small { display: block; }
+.estimate-box span { color: var(--muted); font-size: .78rem; }
+.estimate-box strong { margin: 4px 0 6px; font-size: 1.4rem; }
+.estimate-box small { color: var(--muted); line-height: 1.45; }
 .danger-btn { width: 100%; margin-top: 16px; border: 1px solid #edcccc; border-radius: 14px; background: transparent; color: var(--danger); padding: 13px 18px; font-weight: 700; }
 
 .bottom-nav { position: fixed; z-index: 30; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 640px); display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.94); backdrop-filter: blur(16px); border-top: 1px solid rgba(220,229,227,.9); }
@@ -87,4 +103,6 @@ input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px va
 @media (max-width: 380px) {
   .field-row { grid-template-columns: 1fr; }
   .hero-grid { grid-template-columns: 1fr; }
+  .checkin-card { align-items: flex-start; flex-direction: column; }
+  .checkin-btn { width: 100%; }
 }
