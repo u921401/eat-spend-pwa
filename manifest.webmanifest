@@ -1,0 +1,13 @@
+{
+  "name": "吃多少花多少",
+  "short_name": "吃多少花多少",
+  "description": "同時記錄飲食熱量與餐費的個人 PWA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7f7",
+  "theme_color": "#0f6f73",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f6f73" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="吃多少花多少" />
+  <title>吃多少花多少</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="todayLabel">今天</p>
+        <h1>吃多少花多少</h1>
+      </div>
+      <button class="icon-btn" id="quickAddBtn" aria-label="新增一餐">＋</button>
+    </header>
+
+    <main>
+      <section class="page active" data-page="today">
+        <section class="hero-card">
+          <div>
+            <p class="muted">今天還可以</p>
+            <div class="hero-grid">
+              <div>
+                <strong id="remainingCalories">1,800</strong>
+                <span>kcal</span>
+              </div>
+              <div>
+                <strong id="remainingBudget">NT$400</strong>
+                <span>餐費</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="metric-grid">
+          <article class="metric-card">
+            <div class="metric-header"><span>🔥 熱量</span><span id="caloriePct">0%</span></div>
+            <strong><span id="calorieUsed">0</span> <small>/ <span id="calorieGoalText">1800</span> kcal</small></strong>
+            <div class="progress"><i id="calorieBar"></i></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-header"><span>💰 餐費</span><span id="budgetPct">0%</span></div>
+            <strong>NT$<span id="budgetUsed">0</span> <small>/ NT$<span id="budgetGoalText">400</span></small></strong>
+            <div class="progress"><i id="budgetBar"></i></div>
+          </article>
+          <article class="metric-card wide">
+            <div class="metric-header"><span>💪 蛋白質</span><span id="proteinPct">0%</span></div>
+            <strong><span id="proteinUsed">0</span> <small>/ <span id="proteinGoalText">100</span> g</small></strong>
+            <div class="progress"><i id="proteinBar"></i></div>
+          </article>
+        </section>
+
+        <section class="section-block">
+          <div class="section-title-row">
+            <h2>今天吃了什麼</h2>
+            <button class="text-btn" id="addFromTodayBtn">＋ 新增</button>
+          </div>
+          <div id="todayList" class="meal-list"></div>
+        </section>
+      </section>
+
+      <section class="page" data-page="add">
+        <section class="page-heading">
+          <p class="eyebrow">快速紀錄</p>
+          <h2>新增一餐</h2>
+          <p class="muted">先記最必要的資訊，之後都可以修改。</p>
+        </section>
+
+        <form id="mealForm" class="form-card">
+          <label>吃了什麼
+            <input id="food" name="food" type="text" placeholder="例如：雞腿便當" required />
+          </label>
+
+          <div class="field-row">
+            <label>餐別
+              <select id="mealType" name="mealType">
+                <option>早餐</option>
+                <option>午餐</option>
+                <option>晚餐</option>
+                <option>點心</option>
+                <option>宵夜</option>
+              </select>
+            </label>
+            <label>金額 NT$
+              <input id="cost" name="cost" type="number" inputmode="numeric" min="0" step="1" placeholder="120" required />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label>熱量 kcal
+              <input id="calories" name="calories" type="number" inputmode="numeric" min="0" step="1" placeholder="650" required />
+            </label>
+            <label>蛋白質 g
+              <input id="protein" name="protein" type="number" inputmode="decimal" min="0" step="0.1" placeholder="35" />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label>日期
+              <input id="mealDate" name="mealDate" type="date" required />
+            </label>
+            <label>時間
+              <input id="mealTime" name="mealTime" type="time" required />
+            </label>
+          </div>
+
+          <button class="primary-btn" type="submit">加入紀錄</button>
+        </form>
+      </section>
+
+      <section class="page" data-page="records">
+        <section class="page-heading">
+          <p class="eyebrow">歷史</p>
+          <h2>飲食紀錄</h2>
+          <p class="muted">目前資料只存在這個瀏覽器／裝置。</p>
+        </section>
+        <div id="recordsList" class="meal-list"></div>
+      </section>
+
+      <section class="page" data-page="settings">
+        <section class="page-heading">
+          <p class="eyebrow">個人目標</p>
+          <h2>設定</h2>
+          <p class="muted">先用簡單目標測試你會不會每天打開它。</p>
+        </section>
+
+        <form id="settingsForm" class="form-card">
+          <label>每日熱量目標 kcal
+            <input id="goalCalories" type="number" min="1" step="1" />
+          </label>
+          <label>每日蛋白質目標 g
+            <input id="goalProtein" type="number" min="1" step="1" />
+          </label>
+          <label>每日餐費預算 NT$
+            <input id="goalBudget" type="number" min="1" step="1" />
+          </label>
+          <button class="primary-btn" type="submit">儲存設定</button>
+        </form>
+
+        <button class="danger-btn" id="clearDataBtn">清除所有測試資料</button>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主要導覽">
+      <button class="nav-item active" data-target="today"><span>⌂</span><small>今天</small></button>
+      <button class="nav-item" data-target="add"><span>＋</span><small>新增</small></button>
+      <button class="nav-item" data-target="records"><span>☷</span><small>紀錄</small></button>
+      <button class="nav-item" data-target="settings"><span>⚙</span><small>設定</small></button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
